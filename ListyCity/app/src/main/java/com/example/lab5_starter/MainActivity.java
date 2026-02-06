@@ -24,6 +24,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity implements CityDialogFragment.CityDialogListener {
 
     private Button addCityButton;
+    private Button removeCityButton;
     private City smiteThisCity;
     private ListView cityListView;
 
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements CityDialogFragmen
 
         // Set views
         addCityButton = findViewById(R.id.buttonAddCity);
+        removeCityButton = findViewById(R.id.removeCityButton);
+        removeCityButton.setEnabled(false);
         cityListView = findViewById(R.id.listviewCities);
 
         // create city array
@@ -52,12 +55,12 @@ public class MainActivity extends AppCompatActivity implements CityDialogFragmen
         cityArrayAdapter = new CityArrayAdapter(this, cityArrayList);
         cityListView.setAdapter(cityArrayAdapter);
 
-        // delete cities
-        cityListView.setOnItemLongClickListener((parent, view, position, id) -> {
-            City city = cityArrayAdapter.getItem(position);
-            deleteCity(city);
-            return true;
-        });
+        // delete cities (vestigal method using long presses)
+        //cityListView.setOnItemLongClickListener((parent, view, position, id) -> {
+        //    City city = cityArrayAdapter.getItem(position);
+        //    deleteCity(city);
+        //    return true;
+        //});
 
         // set listeners
         addCityButton.setOnClickListener(view -> {
@@ -66,13 +69,21 @@ public class MainActivity extends AppCompatActivity implements CityDialogFragmen
         });
 
         cityListView.setOnItemClickListener((adapterView, view, i, l) -> {
-            City city = cityArrayAdapter.getItem(i);
-            CityDialogFragment cityDialogFragment = CityDialogFragment.newInstance(city);
-            cityDialogFragment.show(getSupportFragmentManager(),"City Details");
+            smiteThisCity = cityArrayAdapter.getItem(i);
+            removeCityButton.setEnabled(smiteThisCity != null);
+
+            CityDialogFragment cityDialogFragment = CityDialogFragment.newInstance(smiteThisCity);
+            cityDialogFragment.show(getSupportFragmentManager(), "City Details");
         });
 
         db = FirebaseFirestore.getInstance();
         citiesRef = db.collection("cities");
+
+        removeCityButton.setOnClickListener(v -> {
+            deleteCity(smiteThisCity);
+            smiteThisCity = null;
+            removeCityButton.setEnabled(false);
+        });
 
         citiesRef.addSnapshotListener(( value,  error) -> {
             if (error != null){
